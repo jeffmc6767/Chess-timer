@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10-Minute Chess Timer</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #1e1e24;
+            color: #fff;
+            user-select: none;
+        }
+
+        .timer-container {
+            display: flex;
+            width: 80%;
+            max-width: 800px;
+            height: 300px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+
+        .player-box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.1s ease;
+            cursor: pointer;
+        }
+
+        #player1 {
+            background-color: #3a3d40;
+            color: #f5f5f5;
+        }
+
+        #player2 {
+            background-color: #f5f5f5;
+            color: #3a3d40;
+        }
+
+        .active {
+            background-color: #4caf50 !important;
+            color: white !important;
+            transform: scale(1.02);
+            z-index: 1;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+        }
+
+        .time-display {
+            font-size: 5rem;
+            font-weight: bold;
+        }
+
+        .label {
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            opacity: 0.8;
+        }
+
+        #reset-btn {
+            margin-top: 30px;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            background-color: #e63946;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        #reset-btn:hover {
+            background-color: #cb2d3a;
+        }
+
+        .instructions {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="timer-container" id="game-zone">
+        <div id="player1" class="player-box">
+            <div class="label">Player 1</div>
+            <div id="time1" class="time-display">10:00</div>
+        </div>
+        <div id="player2" class="player-box">
+            <div class="label">Player 2</div>
+            <div id="time2" class="time-display">10:00</div>
+        </div>
+    </div>
+
+    <button id="reset-btn">Reset Match</button>
+    <div class="instructions">Press <strong>SPACEBAR</strong> or click the boxes to switch turns.</div>
+
+    <script>
+        const START_TIME = 10 * 60; // 10 minutes in seconds
+        let time1 = START_TIME;
+        let time2 = START_TIME;
+        let activePlayer = 0; // 0 = paused, 1 = player 1, 2 = player 2
+        let timerInterval = null;
+
+        const p1Box = document.getElementById('player1');
+        const p2Box = document.getElementById('player2');
+        const p1Display = document.getElementById('time1');
+        const p2Display = document.getElementById('time2');
+        const resetBtn = document.getElementById('reset-btn');
+        const gameZone = document.getElementById('game-zone');
+
+        function formatTime(seconds) {
+            if (seconds <= 0) return "0:00";
+            let mins = Math.floor(seconds / 60);
+            let secs = seconds % 60;
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        function updateDisplays() {
+            p1Display.textContent = formatTime(time1);
+            p2Display.textContent = formatTime(time2);
+        }
+
+        function switchTurn() {
+            // If game hasn't started or player 2 just finished, it's Player 1's turn
+            if (activePlayer === 0 || activePlayer === 2) {
+                activePlayer = 1;
+                p1Box.classList.add('active');
+                p2Box.classList.remove('active');
+            } else {
+                activePlayer = 2;
+                p2Box.classList.add('active');
+                p1Box.classList.remove('active');
+            }
+
+            // Start clock logic if it isn't already running
+            if (!timerInterval) {
+                timerInterval = setInterval(() => {
+                    if (activePlayer === 1) {
+                        time1--;
+                        if (time1 <= 0) gameOver("Player 2 Wins on Time!");
+                    } else if (activePlayer === 2) {
+                        time2--;
+                        if (time2 <= 0) gameOver("Player 1 Wins on Time!");
+                    }
+                    updateDisplays();
+                }, 1000);
+            }
+        }
+
+        function gameOver(message) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            activePlayer = 0;
+            p1Box.classList.remove('active');
+            p2Box.classList.remove('active');
+            alert(message);
+        }
+
+        function resetGame() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            activePlayer = 0;
+            time1 = START_TIME;
+            time2 = START_TIME;
+            p1Box.classList.remove('active');
+            p2Box.classList.remove('active');
+            updateDisplays();
+        }
+
+        // Listen for Spacebar
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault(); // Prevents page from scrolling down
+                switchTurn();
+            }
+        });
+
+        // Listen for clicks on the timer zone
+        gameZone.addEventListener('click', switchTurn);
+        resetBtn.addEventListener('click', resetGame);
+
+        // Initial render
+        updateDisplays();
+    </script>
+</body>
+</html>
